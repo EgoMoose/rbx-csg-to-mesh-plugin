@@ -57,11 +57,19 @@ function Plugin.build(plugin: Plugin)
 
 		local selected = getSelected()
 		if selected and selected:IsA("BasePart") then
+			local applyColor = false
+			if selected:IsA("UnionOperation") then
+				applyColor = not selected.UsePartColor
+			end
+
 			local csgmdl, err = CSGMDLV5.fromPart(selected)
 
 			if csgmdl then
-				local meshPart = csgmdl:ToMeshPart()
+				local meshPart = csgmdl:ToMeshPart(applyColor)
 				meshPart.Anchored = true
+				meshPart.Material = selected.Material
+				meshPart.MaterialVariant = selected.MaterialVariant
+				meshPart.Color = if applyColor then Color3.new(1, 1, 1) else selected.Color
 				meshPart.CFrame = selected.CFrame
 				meshPart.Parent = selected.Parent
 

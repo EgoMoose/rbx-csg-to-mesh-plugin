@@ -4,7 +4,17 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
-        "egomoose"
+        "CSGMDL",
+        "CSGMDLV",
+        "egomoose",
+        "fromstring",
+        "pcall",
+        "rbxm",
+        "readstring",
+        "readu",
+        "setmetatable",
+        "SSTR",
+        "zstd"
     ],
     "ignoreWords": [],
     "import": []

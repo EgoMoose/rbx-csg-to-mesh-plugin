@@ -1,5 +1,10 @@
 --!strict
 
+local SelectionService = game:GetService("Selection") :: Selection
+
+local pluginRoot = script:FindFirstAncestor("PluginRoot")
+local CSGMDLV5 = require(pluginRoot.Main.CSGMDLV5)
+
 local Plugin = {}
 
 function Plugin.build(plugin: Plugin)
@@ -14,7 +19,19 @@ function Plugin.build(plugin: Plugin)
 	local connection = button.Click:Connect(function()
 		button.Enabled = false
 
-		print("Clicked!")
+		local selection = SelectionService:Get()
+		local selected = if #selection == 1 then selection[1] else nil
+		if selected and selected:IsA("BasePart") then
+			local success, err, csgmdl = CSGMDLV5.fromPart(selected)
+
+			if not success then
+				warn(err)
+			else
+				print("Success")
+			end
+		else
+			warn("Select a single  to use.")
+		end
 
 		button:SetActive(false)
 		button.Enabled = true

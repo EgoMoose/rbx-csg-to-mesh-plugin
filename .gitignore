@@ -1,0 +1,9 @@
+/ServerPackages
+/DevPackages
+/Packages
+/placefiles
+
+plugin.rbxm
+
+sourcemap.json
+*.ds_store

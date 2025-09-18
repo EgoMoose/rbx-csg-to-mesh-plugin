@@ -1,0 +1,19 @@
+{
+	"name": "PluginRoot",
+	"tree": {
+		"$className": "Folder",
+		"$path": "default.project.json",
+		"Packages": {
+			"$path": "Packages"
+		},
+		"Wally": {
+			"$path": "wally.toml"
+		},
+		"Runner": {
+			"$className": "Script",
+			"$properties": {
+				"Source": "if plugin then require(script.Parent.Builds.Plugin).build(plugin) end"
+			}
+		}
+	}
+}

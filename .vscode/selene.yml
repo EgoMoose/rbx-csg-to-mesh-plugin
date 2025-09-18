@@ -1,0 +1,23 @@
+base: roblox
+name: selene_defs
+globals:
+  # override Roblox require style with string requires
+  require:
+    args:
+    - type: string
+
+  buffer.readbits:
+    args:
+      - type:
+          display: buffer
+      - type:
+          display: number
+      - type:
+          display: number
+
+  # changes assert rules to allow optional second arg
+  assert:
+    args:
+      - type: any
+      - type: string
+        required: false

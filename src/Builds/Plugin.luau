@@ -7,20 +7,55 @@ local CSGMDLV5 = require(pluginRoot.Main.CSGMDLV5)
 
 local Plugin = {}
 
+local function iconThemed(button: PluginToolbarButton, light: string, dark: string)
+	local function onThemeChanged()
+		local theme = settings().Studio.Theme
+		button.Icon = if theme.Name:lower() == "light" then light else dark
+	end
+
+	onThemeChanged()
+	settings().Studio.ThemeChanged:Connect(onThemeChanged)
+end
+
+local function getSelected(): BasePart?
+	local selection = SelectionService:Get()
+	local selected = if #selection == 1 then selection[1] else nil
+	if selected and selected:IsA("BasePart") then
+		if
+			selected:IsA("UnionOperation")
+			or selected:IsA("Part")
+			or selected:IsA("WedgePart")
+			or selected:IsA("CornerWedgePart")
+		then
+			return selected
+		end
+	end
+	return nil
+end
+
 function Plugin.build(plugin: Plugin)
 	local toolbar = plugin:CreateToolbar("CSG Tools")
 	local button = toolbar:CreateButton(
 		"egomoose_csg_to_mesh",
 		"Convert a selected UnionOperation into an EditableMesh",
 		"",
-		"Convert"
+		"CSG To Mesh"
 	)
 
-	local connection = button.Click:Connect(function()
+	iconThemed(button, "rbxassetid://93526657211938", "rbxassetid://108214853198422")
+
+	local inProgress = false
+	local selectionChanged = SelectionService.SelectionChanged:Connect(function()
+		if not inProgress then
+			button.Enabled = not not getSelected()
+		end
+	end)
+
+	local buttonClicked = button.Click:Connect(function()
+		inProgress = true
 		button.Enabled = false
 
-		local selection = SelectionService:Get()
-		local selected = if #selection == 1 then selection[1] else nil
+		local selected = getSelected()
 		if selected and selected:IsA("BasePart") then
 			local csgmdl, err = CSGMDLV5.fromPart(selected)
 
@@ -39,11 +74,13 @@ function Plugin.build(plugin: Plugin)
 		end
 
 		button:SetActive(false)
-		button.Enabled = true
+		button.Enabled = not not getSelected()
+		inProgress = false
 	end)
 
 	plugin.Unloading:Connect(function()
-		connection:Disconnect()
+		selectionChanged:Disconnect()
+		buttonClicked:Disconnect()
 	end)
 end
 

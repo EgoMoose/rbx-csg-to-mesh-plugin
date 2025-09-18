@@ -22,12 +22,17 @@ function Plugin.build(plugin: Plugin)
 		local selection = SelectionService:Get()
 		local selected = if #selection == 1 then selection[1] else nil
 		if selected and selected:IsA("BasePart") then
-			local success, err, csgmdl = CSGMDLV5.fromPart(selected)
+			local csgmdl, err = CSGMDLV5.fromPart(selected)
 
-			if not success then
-				warn(err)
+			if csgmdl then
+				local meshPart = csgmdl:ToMeshPart()
+				meshPart.Anchored = true
+				meshPart.CFrame = selected.CFrame
+				meshPart.Parent = selected.Parent
+
+				SelectionService:Set({ meshPart })
 			else
-				print("Success")
+				warn(err)
 			end
 		else
 			warn("Select a single  to use.")

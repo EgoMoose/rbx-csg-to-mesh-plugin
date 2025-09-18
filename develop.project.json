@@ -7,6 +7,18 @@
 			"PluginRoot": {
 				"$path": "plugin.project.json"
 			}
+		},
+		"AssetService": {
+			"$className": "AssetService",
+			"CSGTools": {
+				"$path": "src/Main/Bindings/Interface"
+			}
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"Demo": {
+				"$path": "demo"
+			}
 		}
 	}
 }

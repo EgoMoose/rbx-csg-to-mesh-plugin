@@ -4,6 +4,7 @@ local SelectionService = game:GetService("Selection") :: Selection
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local CSGMDLV5 = require(pluginRoot.Main.CSGMDLV5)
+local Bindings = require(pluginRoot.Main.Bindings)
 
 local Plugin = {}
 
@@ -90,6 +91,8 @@ function Plugin.build(plugin: Plugin)
 		selectionChanged:Disconnect()
 		buttonClicked:Disconnect()
 	end)
+
+	Bindings.setup(plugin)
 end
 
 return Plugin

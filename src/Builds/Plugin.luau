@@ -52,6 +52,8 @@ function Plugin.build(plugin: Plugin)
 		end
 	end)
 
+	button.Enabled = not not getSelected()
+
 	local buttonClicked = button.Click:Connect(function()
 		inProgress = true
 		button.Enabled = false

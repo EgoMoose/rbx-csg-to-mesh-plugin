@@ -1,6 +1,10 @@
 # rbx-csg-to-mesh-plugin
 
-A roblox plugin that converts union operations to editable meshes.
+![banner](assets/banner.png)
+
+CSG To Mesh is a plugin that converts CSG part operations into editable meshes. This can be used to convert many scenes into meshes which as a byproduct allows you to access the triangle data. This can be very valuable for generating and modifying assets in studio.
+
+Keep in mind editable meshes don’t save and must be published before using in an actual game.
 
 ## How was this achieved?
 

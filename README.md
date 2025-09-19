@@ -27,3 +27,5 @@ CSGToMesh.toMeshPart(union: UnionOperation): MeshPart
 This plugin essentially gives you the ability to convert anything that can become a union operation into a mesh. This means you can effectively interface with a large body of common roblox assets as meshes.
 
 For example in the following video this plugin is used to convert a happy home to a mesh and then rotate the vertices so it can be skewed.
+
+https://github.com/user-attachments/assets/1f598c5a-010e-4f13-b09f-60f13d1e7289

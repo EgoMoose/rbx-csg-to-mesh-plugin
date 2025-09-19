@@ -72,6 +72,7 @@ function Plugin.build(plugin: Plugin)
 				meshPart.MaterialVariant = selected.MaterialVariant
 				meshPart.Color = if applyColor then Color3.new(1, 1, 1) else selected.Color
 				meshPart.CFrame = selected.CFrame
+				meshPart.Size = selected.Size
 				meshPart.Parent = selected.Parent
 
 				SelectionService:Set({ meshPart })

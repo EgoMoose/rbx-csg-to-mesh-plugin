@@ -18,6 +18,7 @@ local function callback(selected: BasePart)
 		meshPart.MaterialVariant = selected.MaterialVariant
 		meshPart.Color = if applyColor then Color3.new(1, 1, 1) else selected.Color
 		meshPart.CFrame = selected.CFrame
+		meshPart.Size = selected.Size
 
 		return meshPart
 	end

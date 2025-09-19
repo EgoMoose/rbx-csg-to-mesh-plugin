@@ -2,6 +2,8 @@
 
 local AssetService = game:GetService("AssetService") :: AssetService
 
+local MODULE_NAME = "CSGToMeshBindings"
+
 local Bindings = {}
 
 -- Private
@@ -26,7 +28,7 @@ end
 local function createBindings()
 	local interface = script.Interface:Clone()
 	local binding = interface.Binding
-	interface.Name = "CSGTools"
+	interface.Name = MODULE_NAME
 
 	local descendants = interface:GetDescendants()
 	table.insert(descendants, interface)
@@ -46,7 +48,7 @@ end
 -- Public
 
 function Bindings.setup(plugin: Plugin)
-	local existing = AssetService:FindFirstChild("CSGTools")
+	local existing = AssetService:FindFirstChild(MODULE_NAME)
 	if existing then
 		existing:Destroy()
 	end

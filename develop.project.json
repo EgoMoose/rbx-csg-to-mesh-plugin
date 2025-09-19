@@ -10,7 +10,7 @@
 		},
 		"AssetService": {
 			"$className": "AssetService",
-			"CSGTools": {
+			"CSGToMeshBindings": {
 				"$path": "src/Main/Bindings/Interface"
 			}
 		},

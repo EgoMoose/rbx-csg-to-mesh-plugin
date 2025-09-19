@@ -1,0 +1,3 @@
+--!strict
+
+require(script.Skew)

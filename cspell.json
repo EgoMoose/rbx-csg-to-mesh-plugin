@@ -11,6 +11,7 @@
         "fromstring",
         "lshift",
         "pcall",
+        "rbxasset",
         "rbxassetid",
         "rbxm",
         "readf",

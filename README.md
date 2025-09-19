@@ -6,6 +6,8 @@ CSG To Mesh is a plugin that converts CSG part operations into editable meshes. 
 
 Keep in mind editable meshes don’t save and must be published before using in an actual game.
 
+You can get the plugin on the creator store [here.](https://create.roblox.com/store/asset/130911036428101)
+
 ## How was this achieved?
 
 When local unions are saved as `rbxm` or `rbxmx` files they contain their rendered mesh data in a special format. This plugin serializes unions into the rbxm format and then reads and parses the mesh data into an editable mesh.

@@ -1,6 +1,6 @@
 # rbx-csg-to-mesh-plugin
 
-A roblox plugin that converts union operations to editable meshes.
+A [roblox plugin](https://create.roblox.com/store/asset/130911036428101) that converts union operations to editable meshes.
 
 ## How was this achieved?
 

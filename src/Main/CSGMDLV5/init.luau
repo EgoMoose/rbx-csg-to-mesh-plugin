@@ -41,6 +41,10 @@ end
 function CSGMDLV5Static.fromPart(part: BasePart): (CSGMDLV5?, string)
 	local csg: UnionOperation?
 	local success, err = pcall(function()
+		-- we union the input again for a few reasons:
+		-- 1. It guarantees / converts the input into a union if it's not already
+		-- 2. It bumps the csg format to v5 which is the only format this plugin knows how to read
+		-- 3. This ensures that the mesh data is not stored on the cloud and can be read from the rbxm
 		if part:IsA("PartOperation") then
 			csg = part:UnionAsync({}, part.CollisionFidelity, part.RenderFidelity)
 		else

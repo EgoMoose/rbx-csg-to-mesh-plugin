@@ -1,6 +1,7 @@
 --!strict
 
 local AssetService = game:GetService("AssetService")
+local GeometryService = game:GetService("GeometryService") :: GeometryService
 local SerializationService = game:GetService("SerializationService") :: SerializationService
 
 local SharedString = require(script.SharedString)
@@ -46,9 +47,16 @@ function CSGMDLV5Static.fromPart(part: BasePart): (CSGMDLV5?, string)
 		-- 2. It bumps the csg format to v5 which is the only format this plugin knows how to read
 		-- 3. This ensures that the mesh data is not stored on the cloud and can be read from the rbxm
 		if part:IsA("PartOperation") then
-			csg = part:UnionAsync({}, part.CollisionFidelity, part.RenderFidelity)
+			csg = GeometryService:UnionAsync(part, {}, {
+				CollisionFidelity = part.CollisionFidelity,
+				RenderFidelity = part.RenderFidelity,
+				FluidFidelity = part.FluidFidelity,
+				SplitApart = false,
+			})[1]
 		else
-			csg = part:UnionAsync({})
+			csg = GeometryService:UnionAsync(part, {}, {
+				SplitApart = false,
+			})[1]
 		end
 	end)
 

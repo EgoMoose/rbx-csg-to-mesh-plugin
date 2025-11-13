@@ -6,9 +6,10 @@ string from the input buffer which is assumed to be the binary contents of an rb
 exactly one local union
 --]]
 
+local EncodingService = game:GetService("EncodingService") :: EncodingService
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local BufferStream = require(pluginRoot.Utilities.BufferStream)
-local zstd = require(pluginRoot.Utilities.zstd)
 local lz4 = require(pluginRoot.Utilities.lz4)
 
 -- selene: allow(bad_string_escape)
@@ -70,7 +71,7 @@ local function readChunk(stream: BufferStream.BufferStream, extraction: Extracti
 		else
 			local compressed = buffer.fromstring(stream:readString(compressedLength))
 			if buffer.readstring(compressed, 0, 4) == ZSTD_HEADER then
-				content = zstd.decompress(compressed)
+				content = EncodingService:DecompressBuffer(compressed, Enum.CompressionAlgorithm.Zstd)
 			else
 				content = lz4.decompress(compressed, 0, compressedLength, uncompressedLength)
 			end

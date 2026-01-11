@@ -64,8 +64,13 @@ function CSGMDLV5Static.fromPart(part: BasePart): (CSGMDLV5?, string)
 	if success and csg then
 		local serialized = SerializationService:SerializeInstancesAsync({ csg })
 		csg:Destroy()
+
 		local csgmdlBuffer = SharedString.readCSGMDLBuffer(serialized)
-		csgmdl = CSGMDLV5Static.new(csgmdlBuffer)
+		if csgmdlBuffer then
+			csgmdl = CSGMDLV5Static.new(csgmdlBuffer)
+		else
+			err = "Failed find CSGMDL buffer."
+		end
 	end
 
 	return csgmdl, err or "Success"

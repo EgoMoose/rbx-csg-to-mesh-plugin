@@ -1,0 +1,13 @@
+[creator]
+type = "user"
+id = 10617775963
+
+[codegen]
+typescript = false
+style = "nested"
+strip_extensions = true
+
+[inputs.assets]
+path = "assets/icons/png/**/*"
+output_path = "src/Main/Icons"
+bleed = true

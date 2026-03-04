@@ -170,6 +170,20 @@ function Parser.parse(csgmdlBuffer: buffer)
 
 	local indices = readStateMachine(vertexData, nVertices)
 
+	local marker0 = assert(rangeMarkers[1], "Not enough range markers: 0")
+	local marker1 = assert(rangeMarkers[2], "Not enough range markers: 1")
+	local marker2 = rangeMarkers[3]
+
+	if marker0 ~= 0 then
+		indices = table.move(indices, marker0 + 1, #indices, 1)
+	end
+
+	if not marker2 then
+		for i = 1, marker1 - marker0 do
+			table.remove(indices)
+		end
+	end
+
 	return {
 		positions = positions,
 		normals = normals,

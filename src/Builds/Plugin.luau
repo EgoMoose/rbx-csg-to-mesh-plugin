@@ -5,6 +5,7 @@ local SelectionService = game:GetService("Selection") :: Selection
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local CSGMDLV5 = require(pluginRoot.Main.CSGMDLV5)
 local Bindings = require(pluginRoot.Main.Bindings)
+local Icons = require(pluginRoot.Main.Icons)
 
 local Plugin = {}
 
@@ -43,7 +44,7 @@ function Plugin.build(plugin: Plugin)
 		"CSG To Mesh"
 	)
 
-	iconThemed(button, "rbxassetid://93526657211938", "rbxassetid://108214853198422")
+	iconThemed(button, Icons.icon_light, Icons.icon_dark)
 
 	local inProgress = false
 	local selectionChanged = SelectionService.SelectionChanged:Connect(function()

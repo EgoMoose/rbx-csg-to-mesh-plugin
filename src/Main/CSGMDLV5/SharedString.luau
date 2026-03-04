@@ -18,6 +18,9 @@ local MAGIC_NUMBER = "<roblox!\x89\xff\x0d\x0a\x1a\x0a"
 -- selene: allow(bad_string_escape)
 local ZSTD_HEADER = "\x28\xB5\x2F\xFD"
 
+-- selene: allow(bad_string_escape)
+local CSGMDL_HEADER = "\x15\x7d\x29\x15\x75\x6c"
+
 type Extraction = {
 	sharedStrings: { string },
 }
@@ -44,7 +47,7 @@ local function readHeader(stream: BufferStream.BufferStream)
 	}
 end
 
-function readSSTRChunk(chunkStream: BufferStream.BufferStream, extraction: Extraction)
+local function readSSTRChunk(chunkStream: BufferStream.BufferStream, extraction: Extraction)
 	local _version = chunkStream:readu32()
 	local count = chunkStream:readu32()
 	for _i = 1, count do
@@ -103,9 +106,16 @@ end
 
 -- Public
 
-function SharedString.readCSGMDLBuffer(b: buffer)
+function SharedString.readCSGMDLBuffer(b: buffer): buffer?
 	local extraction = extract(b)
-	return buffer.fromstring(extraction.sharedStrings[3])
+	for _, sharedStr in extraction.sharedStrings do
+		local sharedStrBuffer = buffer.fromstring(sharedStr)
+		local len = buffer.len(sharedStrBuffer)
+		if len >= 6 and buffer.readstring(sharedStrBuffer, 0, 6) == CSGMDL_HEADER then
+			return sharedStrBuffer
+		end
+	end
+	return nil
 end
 
 --

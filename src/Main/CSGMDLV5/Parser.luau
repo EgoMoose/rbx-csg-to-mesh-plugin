@@ -155,22 +155,34 @@ function Parser.parse(csgmdlBuffer: buffer)
 		tangents[i] = Vector3.new(quantize(x, 15), quantize(y, 15), quantize(z, 15))
 	end
 
-	local _nVertices = stream:readu32()
+	local nVertices = stream:readu32()
 	local nVertexData = stream:readu32()
 	local vertexData = {}
 	for i = 1, nVertexData do
 		vertexData[i] = stream:readu8()
 	end
 
-	local rangeMarker = stream:readu8()
-	local _rangeStart = stream:readu32()
-	local rangeEnd = stream:readu32()
-
-	if rangeMarker == 3 then
-		stream:readu32() -- additional range?
+	local nRangeMarker = stream:readu8()
+	local rangeMarkers = {}
+	for i = 1, nRangeMarker do
+		rangeMarkers[i] = stream:readu32()
 	end
 
-	local indices = readStateMachine(vertexData, rangeEnd)
+	local indices = readStateMachine(vertexData, nVertices)
+
+	local marker0 = assert(rangeMarkers[1], "Not enough range markers: 0")
+	local marker1 = assert(rangeMarkers[2], "Not enough range markers: 1")
+	local marker2 = rangeMarkers[3]
+
+	if marker0 ~= 0 then
+		indices = table.move(indices, marker0 + 1, #indices, 1)
+	end
+
+	if not marker2 then
+		for i = 1, marker1 - marker0 do
+			table.remove(indices)
+		end
+	end
 
 	return {
 		positions = positions,

@@ -2,6 +2,7 @@
 
 local AssetService = game:GetService("AssetService") :: AssetService
 
+local ENABLED = true
 local MODULE_NAME = "CSGToMeshBindings"
 
 local Bindings = {}
@@ -48,6 +49,10 @@ end
 -- Public
 
 function Bindings.setup(plugin: Plugin)
+	if not ENABLED then
+		return
+	end
+
 	local existing = AssetService:FindFirstChild(MODULE_NAME)
 	if existing then
 		existing:Destroy()

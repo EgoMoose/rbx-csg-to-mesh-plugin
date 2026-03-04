@@ -1,6 +1,7 @@
 --!strict
 
 local AssetService = game:GetService("AssetService")
+local GeometryService = game:GetService("GeometryService") :: GeometryService
 
 local Utils = {}
 
@@ -41,7 +42,13 @@ function Utils.unionModel(model: Model)
 		end
 	end
 
-	local union = primary:UnionAsync(parts)
+	local union = assert(
+		GeometryService:UnionAsync(primary, parts, {
+			SplitApart = false,
+		})[1] :: UnionOperation,
+		"Failed to union."
+	)
+
 	union.Anchored = true
 	union.Name = model.Name
 	return union

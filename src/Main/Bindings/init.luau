@@ -2,7 +2,7 @@
 
 local AssetService = game:GetService("AssetService") :: AssetService
 
-local ENABLED = true
+local ENABLED = false
 local MODULE_NAME = "CSGToMeshBindings"
 
 local Bindings = {}

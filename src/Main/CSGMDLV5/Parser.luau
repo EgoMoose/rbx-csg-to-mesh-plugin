@@ -49,7 +49,11 @@ local function _deobfuscate(b: buffer, offset: number)
 end
 
 -- selene: allow(bad_string_escape)
-local HEADER = "\x15\x7d\x29\x15\x75\x6c\x35\x04\x34\x69"
+local HEADER =
+	"\x03\x01\xf1\xba\x02\x00\x00\x00\x00\x00\xf1\xba\x02\x00\x53\x6f\x6c\x69\x64\x4d\x65\x73\x68\x00\x00\x00\x00"
+
+-- selene: allow(bad_string_escape)
+local HEADER_OLD = "\x15\x7d\x29\x15\x75\x6c\x35\x04\x34\x69"
 -- equiv to: buffer.tostring(_deobfuscate(buffer.fromstring("CSGMDL\x05\x00\x00\x00"), 0))
 -- which is simply "CSGMDL5" where 5 is a u32 in little endian byte ordering
 -- the other formats require this deobfuscation throughout, but in v5 it's only the header
@@ -109,7 +113,7 @@ end
 
 function Parser.parse(csgmdlBuffer: buffer)
 	local stream = BufferStream.new(csgmdlBuffer)
-	assert(stream:readString(10) == HEADER, "Buffer is not CSGMDLV5")
+	assert(stream:readString(#HEADER) == HEADER, "Buffer is not CSGMDLV5")
 
 	local positions = {}
 	local nPositions = stream:readu16()

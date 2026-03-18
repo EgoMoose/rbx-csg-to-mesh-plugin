@@ -19,7 +19,7 @@ local MAGIC_NUMBER = "<roblox!\x89\xff\x0d\x0a\x1a\x0a"
 local ZSTD_HEADER = "\x28\xB5\x2F\xFD"
 
 -- selene: allow(bad_string_escape)
-local SOLID_MESH_HEADER = "\x03\x01\xf1\xba\x02\x00\x00\x00\x00\x00\xf1\xba\x02\x00\x53\x6f\x6c\x69\x64\x4d\x65\x73\x68"
+local HEADER = "\x03\x01m\x01\x00\x00\x00\x00\x00\x00m\x01\x00\x00SolidMesh\x00\x00\x00\x00"
 
 type Extraction = {
 	sharedStrings: { string },
@@ -106,21 +106,12 @@ end
 
 -- Public
 
-local function hexencode(str)
-	return (str:gsub(".", function(char)
-		return string.format("\\x%02x", char:byte())
-	end))
-end
-
 function SharedString.readCSGMDLBuffer(b: buffer): buffer?
 	local extraction = extract(b)
 	for _, sharedStr in extraction.sharedStrings do
 		local sharedStrBuffer = buffer.fromstring(sharedStr)
 		local len = buffer.len(sharedStrBuffer)
-		if
-			len >= #SOLID_MESH_HEADER
-			and buffer.readstring(sharedStrBuffer, 0, #SOLID_MESH_HEADER) == SOLID_MESH_HEADER
-		then
+		if len >= #HEADER and buffer.readstring(sharedStrBuffer, 0, #HEADER) == HEADER then
 			return sharedStrBuffer
 		end
 	end

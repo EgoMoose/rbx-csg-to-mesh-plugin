@@ -49,28 +49,12 @@ local function _deobfuscate(b: buffer, offset: number)
 end
 
 -- selene: allow(bad_string_escape)
-local HEADER = "\x15\x7d\x29\x15\x75\x6c\x35\x04\x34\x69"
--- equiv to: buffer.tostring(_deobfuscate(buffer.fromstring("CSGMDL\x05\x00\x00\x00"), 0))
--- which is simply "CSGMDL5" where 5 is a u32 in little endian byte ordering
--- the other formats require this deobfuscation throughout, but in v5 it's only the header
+local HEADER = "SolidMesh\x00\x00\x00\x00"
+-- 14 bytes preceding
 
 local Parser = {}
 
 -- Private
-
-local function wrapNumber(x: number, min: number, max: number)
-	local range = max - min
-	local wrapped = (x - min) % range
-	if wrapped < 0 then
-		wrapped = wrapped + range
-	end
-	return wrapped + min
-end
-
-local function quantize(x: number, bits: number)
-	local max = 2 ^ bits - 1
-	return wrapNumber(x - max, -max - 1, max + 1) / max
-end
 
 local function u8toi8(x: number)
 	return if x >= 128 then x - 256 else x
@@ -109,89 +93,75 @@ end
 
 function Parser.parse(csgmdlBuffer: buffer)
 	local stream = BufferStream.new(csgmdlBuffer)
-	assert(stream:readString(10) == HEADER, "Buffer is not CSGMDLV5")
+	for _ = 1, 14 do
+		stream:readu8()
+	end
+	assert(stream:readString(#HEADER) == HEADER, "Buffer is not CSGMDLV5")
 
 	local positions = {}
-	local nPositions = stream:readu16()
+	local nPositions = stream:readu32()
+	stream:readu32()
 	for i = 1, nPositions do
 		local x, y, z = stream:readf32(), stream:readf32(), stream:readf32()
 		positions[i] = Vector3.new(x, y, z)
 	end
 
 	local normals = {}
-	local nNormals = stream:readu16()
-	stream:readu32() -- number of bytes containing the components: nNormals * 3 (components) * 2 (bytes, i16)
+	local nNormals = stream:readu32()
+	stream:readu32()
 	for i = 1, nNormals do
-		local x, y, z = stream:readi16(), stream:readi16(), stream:readi16()
-		normals[i] = Vector3.new(quantize(x, 15), quantize(y, 15), quantize(z, 15))
+		local x, y, z = stream:readf32(), stream:readf32(), stream:readf32()
+		normals[i] = Vector3.new(x, y, z)
 	end
+
+	-- unknown?
+	stream:readu32()
+	stream:readu32()
 
 	local colors = {}
-	local nColors = stream:readu16()
+	local nColors = stream:readu32()
+	stream:readu32()
 	for i = 1, nColors do
-		local r, g, b, a = stream:readu8(), stream:readu8(), stream:readu8(), stream:readu8()
-		colors[i] = { r, g, b, a }
+		local r, g, b = stream:readf32(), stream:readf32(), stream:readf32()
+		colors[i] = { r, g, b }
 	end
 
-	local normalIds = {}
-	local nNormalIds = stream:readu16()
-	for i = 1, nNormalIds do
-		-- 1 = right, 2 = top, 3 = back, 4 = left, 5 = bottom, 6 = front
-		normalIds[i] = stream:readu8()
+	local facesData = {}
+	local nFacesData = stream:readu32()
+	stream:readu32()
+	for i = 1, nFacesData do
+		facesData[i] = stream:readu8()
 	end
+	local faces = readStateMachine(facesData, nFacesData)
 
-	local uvs = {}
-	local nUvs = stream:readu16()
-	for i = 1, nUvs do
-		local u, v = stream:readf32(), stream:readf32()
-		uvs[i] = Vector2.new(u, v)
+	local faceNormalsData = {}
+	local nFaceNormalsData = stream:readu32()
+	stream:readu32()
+	for i = 1, nFaceNormalsData do
+		faceNormalsData[i] = stream:readu8()
 	end
+	local faceNormals = readStateMachine(faceNormalsData, nFaceNormalsData)
 
-	local tangents = {}
-	local nTangents = stream:readu16()
-	stream:readu32() -- number of bytes containing the components: nTangents * 3 (components) * 2 (bytes, i16)
-	for i = 1, nTangents do
-		local x, y, z = stream:readi16(), stream:readi16(), stream:readi16()
-		tangents[i] = Vector3.new(quantize(x, 15), quantize(y, 15), quantize(z, 15))
+	-- unknown
+	stream:readu32()
+	stream:readu32()
+
+	local faceColorsData = {}
+	local nFaceColorsData = stream:readu32()
+	stream:readu32()
+	for i = 1, nFaceColorsData do
+		faceColorsData[i] = stream:readu8()
 	end
-
-	local nVertices = stream:readu32()
-	local nVertexData = stream:readu32()
-	local vertexData = {}
-	for i = 1, nVertexData do
-		vertexData[i] = stream:readu8()
-	end
-
-	local nRangeMarker = stream:readu8()
-	local rangeMarkers = {}
-	for i = 1, nRangeMarker do
-		rangeMarkers[i] = stream:readu32()
-	end
-
-	local indices = readStateMachine(vertexData, nVertices)
-
-	local marker0 = assert(rangeMarkers[1], "Not enough range markers: 0")
-	local marker1 = assert(rangeMarkers[2], "Not enough range markers: 1")
-	local marker2 = rangeMarkers[3]
-
-	if marker0 ~= 0 then
-		indices = table.move(indices, marker0 + 1, #indices, 1)
-	end
-
-	if not marker2 then
-		for i = 1, marker1 - marker0 do
-			table.remove(indices)
-		end
-	end
+	local faceColors = readStateMachine(faceColorsData, nFaceColorsData)
 
 	return {
 		positions = positions,
 		normals = normals,
 		colors = colors,
-		normalIds = normalIds,
-		uvs = uvs,
-		tangents = tangents,
-		faces = indices,
+
+		faces = faces,
+		faceNormals = faceNormals,
+		faceColors = faceColors,
 	}
 end
 

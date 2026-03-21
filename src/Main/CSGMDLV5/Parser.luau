@@ -142,6 +142,10 @@ function Parser.parse(csgmdlBuffer: buffer)
 	end
 	local faceNormals = readStateMachine(faceNormalsData, nFaceNormalsData)
 
+	-- unknown
+	stream:readu32()
+	stream:readu32()
+
 	local faceColorsData = {}
 	local nFaceColorsData = stream:readu32()
 	stream:readu32()

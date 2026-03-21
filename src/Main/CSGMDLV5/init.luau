@@ -118,9 +118,9 @@ function CSGMDLV5Class.ToMeshPart(self: CSGMDLV5, useColorData: boolean)
 
 		if useColorData then
 			editMesh:SetFaceColors(faceId, {
-				colorIds[(self.faceColors[i + 0] or 0) + 1],
-				colorIds[(self.faceColors[i + 1] or 0) + 1],
-				colorIds[(self.faceColors[i + 2] or 0) + 1],
+				colorIds[self.faceColors[i + 0] + 1],
+				colorIds[self.faceColors[i + 1] + 1],
+				colorIds[self.faceColors[i + 2] + 1],
 			})
 		end
 	end

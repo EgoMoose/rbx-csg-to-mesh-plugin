@@ -18,7 +18,10 @@ export type CSGMDLV5 = typeof(setmetatable(
 		positions: { Vector3 },
 		normals: { Vector3 },
 		colors: { { number } },
+
 		faces: { number },
+		faceNormals: { number },
+		faceColors: { number },
 	},
 	CSGMDLV5Class
 ))
@@ -32,7 +35,10 @@ function CSGMDLV5Static.new(csgmdlBuffer: buffer)
 	self.positions = parsed.positions
 	self.normals = parsed.normals
 	self.colors = parsed.colors
+
 	self.faces = parsed.faces
+	self.faceNormals = parsed.faceNormals
+	self.faceColors = parsed.faceColors
 
 	return self
 end
@@ -98,15 +104,24 @@ function CSGMDLV5Class.ToMeshPart(self: CSGMDLV5, useColorData: boolean)
 	end
 
 	for i = 1, #self.faces, 3 do
-		local a = self.faces[i + 0] + 1
-		local b = self.faces[i + 1] + 1
-		local c = self.faces[i + 2] + 1
+		local faceId = editMesh:AddTriangle(
+			vertexIds[self.faces[i + 0] + 1],
+			vertexIds[self.faces[i + 1] + 1],
+			vertexIds[self.faces[i + 2] + 1]
+		)
 
-		local faceId = editMesh:AddTriangle(vertexIds[a], vertexIds[b], vertexIds[c])
-		editMesh:SetFaceNormals(faceId, { normalIds[a], normalIds[b], normalIds[c] })
+		editMesh:SetFaceNormals(faceId, {
+			normalIds[self.faceNormals[i + 0] + 1],
+			normalIds[self.faceNormals[i + 1] + 1],
+			normalIds[self.faceNormals[i + 2] + 1],
+		})
 
 		if useColorData then
-			editMesh:SetFaceColors(faceId, { colorIds[a], colorIds[b], colorIds[c] })
+			editMesh:SetFaceColors(faceId, {
+				colorIds[(self.faceColors[i + 0] or 0) + 1],
+				colorIds[(self.faceColors[i + 1] or 0) + 1],
+				colorIds[(self.faceColors[i + 2] or 0) + 1],
+			})
 		end
 	end
 

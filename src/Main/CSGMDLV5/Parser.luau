@@ -126,20 +126,38 @@ function Parser.parse(csgmdlBuffer: buffer)
 		colors[i] = { r, g, b }
 	end
 
-	local vertexData = {}
-	local nVertices = stream:readu32()
+	local facesData = {}
+	local nFacesData = stream:readu32()
 	stream:readu32()
-	for i = 1, nVertices do
-		vertexData[i] = stream:readu8()
+	for i = 1, nFacesData do
+		facesData[i] = stream:readu8()
 	end
+	local faces = readStateMachine(facesData, nFacesData)
 
-	local indices = readStateMachine(vertexData, nVertices)
+	local faceNormalsData = {}
+	local nFaceNormalsData = stream:readu32()
+	stream:readu32()
+	for i = 1, nFaceNormalsData do
+		faceNormalsData[i] = stream:readu8()
+	end
+	local faceNormals = readStateMachine(faceNormalsData, nFaceNormalsData)
+
+	local faceColorsData = {}
+	local nFaceColorsData = stream:readu32()
+	stream:readu32()
+	for i = 1, nFaceColorsData do
+		faceColorsData[i] = stream:readu8()
+	end
+	local faceColors = readStateMachine(faceColorsData, nFaceColorsData)
 
 	return {
 		positions = positions,
 		normals = normals,
 		colors = colors,
-		faces = indices,
+
+		faces = faces,
+		faceNormals = faceNormals,
+		faceColors = faceColors,
 	}
 end
 

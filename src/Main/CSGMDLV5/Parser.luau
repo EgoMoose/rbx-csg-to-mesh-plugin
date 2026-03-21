@@ -49,25 +49,12 @@ local function _deobfuscate(b: buffer, offset: number)
 end
 
 -- selene: allow(bad_string_escape)
-local HEADER = "\x03\x01m\x01\x00\x00\x00\x00\x00\x00m\x01\x00\x00SolidMesh\x00\x00\x00\x00"
+local HEADER = "SolidMesh\x00\x00\x00\x00"
+-- 14 bytes preceding
 
 local Parser = {}
 
 -- Private
-
-local function wrapNumber(x: number, min: number, max: number)
-	local range = max - min
-	local wrapped = (x - min) % range
-	if wrapped < 0 then
-		wrapped = wrapped + range
-	end
-	return wrapped + min
-end
-
-local function quantize(x: number, bits: number)
-	local max = 2 ^ bits - 1
-	return wrapNumber(x - max, -max - 1, max + 1) / max
-end
 
 local function u8toi8(x: number)
 	return if x >= 128 then x - 256 else x
@@ -106,6 +93,9 @@ end
 
 function Parser.parse(csgmdlBuffer: buffer)
 	local stream = BufferStream.new(csgmdlBuffer)
+	for _ = 1, 14 do
+		stream:readu8()
+	end
 	assert(stream:readString(#HEADER) == HEADER, "Buffer is not CSGMDLV5")
 
 	local positions = {}
@@ -124,73 +114,31 @@ function Parser.parse(csgmdlBuffer: buffer)
 		normals[i] = Vector3.new(x, y, z)
 	end
 
-	-- good up to here?
+	-- unknown?
+	stream:readu32()
+	stream:readu32()
 
 	local colors = {}
 	local nColors = stream:readu32()
+	stream:readu32()
 	for i = 1, nColors do
-		local r, g, b, a = stream:readu8(), stream:readu8(), stream:readu8(), stream:readu8()
-		colors[i] = { r, g, b, a }
+		local r, g, b = stream:readf32(), stream:readf32(), stream:readf32()
+		colors[i] = { r, g, b }
 	end
 
-	local normalIds = {}
-	local nNormalIds = stream:readu32()
-	for i = 1, nNormalIds do
-		-- 1 = right, 2 = top, 3 = back, 4 = left, 5 = bottom, 6 = front
-		normalIds[i] = stream:readu8()
-	end
-
-	local uvs = {}
-	local nUvs = stream:readu32()
-	for i = 1, nUvs do
-		local u, v = stream:readf32(), stream:readf32()
-		uvs[i] = Vector2.new(u, v)
-	end
-
-	local tangents = {}
-	local nTangents = stream:readu32()
-	stream:readu32() -- number of bytes containing the components: nTangents * 3 (components) * 2 (bytes, i16)
-	for i = 1, nTangents do
-		local x, y, z = stream:readi16(), stream:readi16(), stream:readi16()
-		tangents[i] = Vector3.new(quantize(x, 15), quantize(y, 15), quantize(z, 15))
-	end
-
-	local nVertices = stream:readu32()
-	local nVertexData = stream:readu32()
 	local vertexData = {}
-	for i = 1, nVertexData do
+	local nVertices = stream:readu32()
+	stream:readu32()
+	for i = 1, nVertices do
 		vertexData[i] = stream:readu8()
 	end
 
-	local nRangeMarker = stream:readu8()
-	local rangeMarkers = {}
-	for i = 1, nRangeMarker do
-		rangeMarkers[i] = stream:readu32()
-	end
-
 	local indices = readStateMachine(vertexData, nVertices)
-
-	local marker0 = assert(rangeMarkers[1], "Not enough range markers: 0")
-	local marker1 = assert(rangeMarkers[2], "Not enough range markers: 1")
-	local marker2 = rangeMarkers[3]
-
-	if marker0 ~= 0 then
-		indices = table.move(indices, marker0 + 1, #indices, 1)
-	end
-
-	if not marker2 then
-		for i = 1, marker1 - marker0 do
-			table.remove(indices)
-		end
-	end
 
 	return {
 		positions = positions,
 		normals = normals,
 		colors = colors,
-		normalIds = normalIds,
-		uvs = uvs,
-		tangents = tangents,
 		faces = indices,
 	}
 end

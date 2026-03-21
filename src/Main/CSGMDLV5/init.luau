@@ -103,11 +103,11 @@ function CSGMDLV5Class.ToMeshPart(self: CSGMDLV5, useColorData: boolean)
 		local c = self.faces[i + 2] + 1
 
 		local faceId = editMesh:AddTriangle(vertexIds[a], vertexIds[b], vertexIds[c])
-		-- editMesh:SetFaceNormals(faceId, { normalIds[a], normalIds[b], normalIds[c] })
+		editMesh:SetFaceNormals(faceId, { normalIds[a], normalIds[b], normalIds[c] })
 
-		-- if useColorData then
-		-- 	editMesh:SetFaceColors(faceId, { colorIds[a], colorIds[b], colorIds[c] })
-		-- end
+		if useColorData then
+			editMesh:SetFaceColors(faceId, { colorIds[a], colorIds[b], colorIds[c] })
+		end
 	end
 
 	local fixedSizeMesh = AssetService:CreateEditableMeshAsync(Content.fromObject(editMesh), { FixedSize = true })

@@ -8,45 +8,43 @@ local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local SharedString = require(pluginRoot.Main.SharedString)
 local Parser = require(script.Parser)
 
-local CSGMDLV5Static = {}
+local SolidMeshStatic = {}
 
-local CSGMDLV5Class = {}
-CSGMDLV5Class.__index = CSGMDLV5Class
-CSGMDLV5Class.ClassName = "CSGMDLV5"
+local SolidMeshClass = {}
+SolidMeshClass.__index = SolidMeshClass
+SolidMeshClass.ClassName = "SolidMesh"
 
-export type CSGMDLV5 = typeof(setmetatable(
+export type SolidMesh = typeof(setmetatable(
 	{} :: {
 		positions: { Vector3 },
 		normals: { Vector3 },
 		colors: { { number } },
-		uvs: { Vector2 },
+
 		faces: { number },
+		faceNormals: { number },
+		faceColors: { number },
 	},
-	CSGMDLV5Class
+	SolidMeshClass
 ))
 
--- Constructors
+function SolidMeshStatic.new(solidMeshBuffer: buffer)
+	local self = setmetatable({}, SolidMeshClass)
 
-function CSGMDLV5Static.new(csgmdlBuffer: buffer)
-	local self = setmetatable({}, CSGMDLV5Class) :: CSGMDLV5
-
-	local parsed = Parser.parse(csgmdlBuffer)
+	local parsed = Parser.parse(solidMeshBuffer)
 	self.positions = parsed.positions
 	self.normals = parsed.normals
 	self.colors = parsed.colors
-	self.uvs = parsed.uvs
+
 	self.faces = parsed.faces
+	self.faceNormals = parsed.faceNormals
+	self.faceColors = parsed.faceColors
 
 	return self
 end
 
-function CSGMDLV5Static.fromPart(part: BasePart): (CSGMDLV5?, string)
+function SolidMeshStatic.fromPart(part: BasePart): (SolidMesh?, string)
 	local csg: UnionOperation?
 	local success, err = pcall(function()
-		-- we union the input again for a few reasons:
-		-- 1. It guarantees / converts the input into a union if it's not already
-		-- 2. It bumps the csg format to v5 which is the only format this plugin knows how to read
-		-- 3. This ensures that the mesh data is not stored on the cloud and can be read from the rbxm
 		if part:IsA("PartOperation") then
 			csg = GeometryService:UnionAsync(part, {}, {
 				CollisionFidelity = part.CollisionFidelity,
@@ -61,29 +59,29 @@ function CSGMDLV5Static.fromPart(part: BasePart): (CSGMDLV5?, string)
 		end
 	end)
 
-	local csgmdl: CSGMDLV5?
+	local solidMesh: SolidMesh?
 	if success and csg then
 		local serialized = SerializationService:SerializeInstancesAsync({ csg })
 		csg:Destroy()
 
-		local csgmdlBuffer = SharedString.extract(serialized, function(b)
+		local solidMeshBuffer = SharedString.extract(serialized, function(b)
 			return buffer.len(b) >= Parser.PADDING_BYTES + #Parser.HEADER
 				and buffer.readstring(b, Parser.PADDING_BYTES, #Parser.HEADER) == Parser.HEADER
 		end)
 
-		if csgmdlBuffer then
-			csgmdl = CSGMDLV5Static.new(csgmdlBuffer)
+		if solidMeshBuffer then
+			solidMesh = SolidMeshStatic.new(solidMeshBuffer)
 		else
-			err = "Failed find CSGMDL buffer."
+			err = "Failed find SolidMesh buffer."
 		end
 	end
 
-	return csgmdl, err or "Success"
+	return solidMesh, err or "Success"
 end
 
 -- Methods
 
-function CSGMDLV5Class.ToMeshPart(self: CSGMDLV5, useColorData: boolean)
+function SolidMeshClass.ToMeshPart(self: SolidMesh, useColorData: boolean)
 	local editMesh = AssetService:CreateEditableMesh()
 
 	local vertexIds = {}
@@ -99,27 +97,30 @@ function CSGMDLV5Class.ToMeshPart(self: CSGMDLV5, useColorData: boolean)
 	local colorIds = {}
 	if useColorData then
 		for i, rgba in self.colors do
-			local color = Color3.fromRGB(rgba[1], rgba[2], rgba[3])
-			colorIds[i] = editMesh:AddColor(color, rgba[4] / 255)
+			local color = Color3.new(rgba[1], rgba[2], rgba[3])
+			colorIds[i] = editMesh:AddColor(color, 1)
 		end
 	end
 
-	local uvIds = {}
-	for i, uv in self.uvs do
-		uvIds[i] = editMesh:AddUV(uv)
-	end
-
 	for i = 1, #self.faces, 3 do
-		local a = self.faces[i + 0] + 1
-		local b = self.faces[i + 1] + 1
-		local c = self.faces[i + 2] + 1
+		local faceId = editMesh:AddTriangle(
+			vertexIds[self.faces[i + 0] + 1],
+			vertexIds[self.faces[i + 1] + 1],
+			vertexIds[self.faces[i + 2] + 1]
+		)
 
-		local faceId = editMesh:AddTriangle(vertexIds[a], vertexIds[b], vertexIds[c])
-		editMesh:SetFaceNormals(faceId, { normalIds[a], normalIds[b], normalIds[c] })
-		editMesh:SetFaceUVs(faceId, { uvIds[a], uvIds[b], uvIds[c] })
+		editMesh:SetFaceNormals(faceId, {
+			normalIds[self.faceNormals[i + 0] + 1],
+			normalIds[self.faceNormals[i + 1] + 1],
+			normalIds[self.faceNormals[i + 2] + 1],
+		})
 
 		if useColorData then
-			editMesh:SetFaceColors(faceId, { colorIds[a], colorIds[b], colorIds[c] })
+			editMesh:SetFaceColors(faceId, {
+				colorIds[self.faceColors[i + 0] + 1],
+				colorIds[self.faceColors[i + 1] + 1],
+				colorIds[self.faceColors[i + 2] + 1],
+			})
 		end
 	end
 
@@ -130,4 +131,4 @@ end
 
 --
 
-return CSGMDLV5Static
+return SolidMeshStatic

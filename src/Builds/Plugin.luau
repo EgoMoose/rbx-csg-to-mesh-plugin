@@ -3,9 +3,11 @@
 local SelectionService = game:GetService("Selection") :: Selection
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local CSGMDLV5 = require(pluginRoot.Main.Formats.CSGMDLV5)
 local Bindings = require(pluginRoot.Main.Bindings)
 local Icons = require(pluginRoot.Main.Icons)
+
+local _CSGMDLV5 = require(pluginRoot.Main.Formats.CSGMDLV5)
+local SolidMesh = require(pluginRoot.Main.Formats.SolidMesh)
 
 local Plugin = {}
 
@@ -66,10 +68,10 @@ function Plugin.build(plugin: Plugin)
 				applyColor = not selected.UsePartColor
 			end
 
-			local csgmdl, err = CSGMDLV5.fromPart(selected)
+			local solidMesh, err = SolidMesh.fromPart(selected)
 
-			if csgmdl then
-				local meshPart = csgmdl:ToMeshPart(applyColor)
+			if solidMesh then
+				local meshPart = solidMesh:ToMeshPart(applyColor)
 				meshPart.Anchored = true
 				meshPart.Material = selected.Material
 				meshPart.MaterialVariant = selected.MaterialVariant

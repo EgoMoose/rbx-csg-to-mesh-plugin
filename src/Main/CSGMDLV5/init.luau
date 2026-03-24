@@ -4,8 +4,11 @@ local AssetService = game:GetService("AssetService")
 local GeometryService = game:GetService("GeometryService") :: GeometryService
 local SerializationService = game:GetService("SerializationService") :: SerializationService
 
-local SharedString = require(script.SharedString)
+local pluginRoot = script:FindFirstAncestor("PluginRoot")
+local SharedString = require(pluginRoot.Main.SharedString)
 local Parser = require(script.Parser)
+
+local CSGMDL_HEADER = "\x15\x7d\x29\x15\x75\x6c"
 
 local CSGMDLV5Static = {}
 
@@ -65,7 +68,10 @@ function CSGMDLV5Static.fromPart(part: BasePart): (CSGMDLV5?, string)
 		local serialized = SerializationService:SerializeInstancesAsync({ csg })
 		csg:Destroy()
 
-		local csgmdlBuffer = SharedString.readCSGMDLBuffer(serialized)
+		local csgmdlBuffer = SharedString.extract(serialized, function(b)
+			return buffer.len(b) >= #CSGMDL_HEADER and buffer.readstring(b, 0, #CSGMDL_HEADER) == CSGMDL_HEADER
+		end)
+
 		if csgmdlBuffer then
 			csgmdl = CSGMDLV5Static.new(csgmdlBuffer)
 		else

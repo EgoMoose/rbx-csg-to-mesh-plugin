@@ -60,18 +60,12 @@ local function u8toi8(x: number)
 	return if x >= 128 then x - 256 else x
 end
 
-local function readStateMachine(data: { number }, count: number)
+local function readStateMachine(count: number, stream: BufferStream.BufferStream)
 	local index = 0
 	local indices = {}
 
-	local j = 0
-	local function iterNext()
-		j = j + 1
-		return data[j]
-	end
-
 	for _ = 1, count do
-		local v0 = iterNext()
+		local v0 = stream:readu8()
 		if bit32.band(v0, bit32.lshift(1, 7)) == 0 then
 			if bit32.band(v0, bit32.lshift(1, 6)) == 0 then
 				index = index + v0
@@ -79,8 +73,8 @@ local function readStateMachine(data: { number }, count: number)
 				index = index + u8toi8(bit32.bor(v0, 0x80))
 			end
 		else
-			local v1 = iterNext()
-			local v2 = iterNext()
+			local v1 = stream:readu8()
+			local v2 = stream:readu8()
 			index = index + bit32.bor(v2, bit32.lshift(v1, 8), bit32.lshift(bit32.band(v0, 0x7F), 16))
 		end
 		table.insert(indices, bit32.band(index, 0x7FFFFF))
@@ -114,9 +108,13 @@ function Parser.parse(csgmdlBuffer: buffer)
 		normals[i] = Vector3.new(x, y, z)
 	end
 
-	-- unknown?
+	-- this might be UVs?
+	local unknown1 = stream:readu32()
 	stream:readu32()
-	stream:readu32()
+	for i = 1, unknown1 do
+		stream:readf32()
+		stream:readf32()
+	end
 
 	local colors = {}
 	local nColors = stream:readu32()
@@ -126,33 +124,21 @@ function Parser.parse(csgmdlBuffer: buffer)
 		colors[i] = { r, g, b }
 	end
 
-	local facesData = {}
 	local nFacesData = stream:readu32()
 	stream:readu32()
-	for i = 1, nFacesData do
-		facesData[i] = stream:readu8()
-	end
-	local faces = readStateMachine(facesData, nFacesData)
+	local faces = readStateMachine(nFacesData, stream)
 
-	local faceNormalsData = {}
 	local nFaceNormalsData = stream:readu32()
 	stream:readu32()
-	for i = 1, nFaceNormalsData do
-		faceNormalsData[i] = stream:readu8()
-	end
-	local faceNormals = readStateMachine(faceNormalsData, nFaceNormalsData)
+	local faceNormals = readStateMachine(nFaceNormalsData, stream)
 
-	-- unknown
+	local nFaceUnknown1sData = stream:readu32()
 	stream:readu32()
-	stream:readu32()
+	local _faceUnknown1s = readStateMachine(nFaceUnknown1sData, stream)
 
-	local faceColorsData = {}
 	local nFaceColorsData = stream:readu32()
 	stream:readu32()
-	for i = 1, nFaceColorsData do
-		faceColorsData[i] = stream:readu8()
-	end
-	local faceColors = readStateMachine(faceColorsData, nFaceColorsData)
+	local faceColors = readStateMachine(nFaceColorsData, stream)
 
 	return {
 		positions = positions,

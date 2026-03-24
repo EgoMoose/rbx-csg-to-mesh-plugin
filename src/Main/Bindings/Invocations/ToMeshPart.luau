@@ -1,7 +1,7 @@
 --!strict
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local CSGMDLV5 = require(pluginRoot.Main.CSGMDLV5)
+local SolidMesh = require(pluginRoot.Main.Formats.SolidMesh)
 
 local function callback(selected: BasePart)
 	local applyColor = false
@@ -9,10 +9,10 @@ local function callback(selected: BasePart)
 		applyColor = not selected.UsePartColor
 	end
 
-	local csgmdl, err = CSGMDLV5.fromPart(selected)
+	local solidMesh, err = SolidMesh.fromPart(selected)
 
-	if csgmdl then
-		local meshPart = csgmdl:ToMeshPart(applyColor)
+	if solidMesh then
+		local meshPart = solidMesh:ToMeshPart(applyColor)
 		meshPart.Anchored = true
 		meshPart.Material = selected.Material
 		meshPart.MaterialVariant = selected.MaterialVariant

@@ -18,9 +18,6 @@ local MAGIC_NUMBER = "<roblox!\x89\xff\x0d\x0a\x1a\x0a"
 -- selene: allow(bad_string_escape)
 local ZSTD_HEADER = "\x28\xB5\x2F\xFD"
 
--- selene: allow(bad_string_escape)
-local CSGMDL_HEADER = "\x15\x7d\x29\x15\x75\x6c"
-
 type Extraction = {
 	sharedStrings: { string },
 }
@@ -106,12 +103,11 @@ end
 
 -- Public
 
-function SharedString.readCSGMDLBuffer(b: buffer): buffer?
+function SharedString.extract(b: buffer, predicate: (buffer) -> boolean): buffer?
 	local extraction = extract(b)
 	for _, sharedStr in extraction.sharedStrings do
 		local sharedStrBuffer = buffer.fromstring(sharedStr)
-		local len = buffer.len(sharedStrBuffer)
-		if len >= 6 and buffer.readstring(sharedStrBuffer, 0, 6) == CSGMDL_HEADER then
+		if predicate(sharedStrBuffer) then
 			return sharedStrBuffer
 		end
 	end

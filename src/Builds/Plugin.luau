@@ -3,7 +3,7 @@
 local SelectionService = game:GetService("Selection") :: Selection
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local CSGMDLV5 = require(pluginRoot.Main.CSGMDLV5)
+local CSGMDLV5 = require(pluginRoot.Main.Formats.CSGMDLV5)
 local Bindings = require(pluginRoot.Main.Bindings)
 local Icons = require(pluginRoot.Main.Icons)
 

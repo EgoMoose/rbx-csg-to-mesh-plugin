@@ -29,7 +29,7 @@ https://github.com/krakow10/rbx_mesh
 --]]
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local BufferStream = require(pluginRoot.Utilities.BufferStream)
+local BufferStream = require(pluginRoot.Packages.BufferStream)
 
 -- stylua: ignore
 local OBFUSCATION_NOISE_CYCLE_XOR = {
@@ -108,7 +108,7 @@ end
 -- Public
 
 function Parser.parse(csgmdlBuffer: buffer)
-	local stream = BufferStream.new(csgmdlBuffer)
+	local stream = BufferStream.static(csgmdlBuffer)
 	for _ = 1, Parser.PADDING_BYTES do
 		stream:readu8()
 	end

@@ -4,10 +4,10 @@ registry = "test"
 
 [[package]]
 name = "egomoose/buffer-stream"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = []
 
 [[package]]
 name = "egomoose/rbx-csg-to-mesh-plugin"
 version = "1.0.0"
-dependencies = [["BufferStream", "egomoose/buffer-stream@0.2.0"]]
+dependencies = [["BufferStream", "egomoose/buffer-stream@1.0.0"]]

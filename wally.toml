@@ -11,4 +11,4 @@ include = ["src", "src/**", "wally.toml", "wally.lock", "default.project.json", 
 private = true
 
 [dependencies]
-BufferStream = "egomoose/buffer-stream@0.2.0"
+BufferStream = "egomoose/buffer-stream@1.0.0"

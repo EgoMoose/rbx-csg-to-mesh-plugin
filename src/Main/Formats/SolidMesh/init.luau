@@ -5,6 +5,7 @@ local GeometryService = game:GetService("GeometryService") :: GeometryService
 local SerializationService = game:GetService("SerializationService") :: SerializationService
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
+local StaticContent = require(pluginRoot.Main.StaticContent)
 local SharedString = require(pluginRoot.Main.SharedString)
 local Parser = require(script.Parser)
 
@@ -124,9 +125,9 @@ function SolidMeshClass.ToMeshPart(self: SolidMesh, useColorData: boolean)
 		end
 	end
 
-	local fixedSizeMesh = AssetService:CreateEditableMeshAsync(Content.fromObject(editMesh), { FixedSize = true })
+	local content = StaticContent.convert(Content.fromObject(editMesh))
 	editMesh:Destroy()
-	return AssetService:CreateMeshPartAsync(Content.fromObject(fixedSizeMesh))
+	return AssetService:CreateMeshPartAsync(content)
 end
 
 --

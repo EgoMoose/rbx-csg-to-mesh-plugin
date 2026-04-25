@@ -87,7 +87,13 @@ function Parser.parse(csgmdlBuffer: buffer)
 
 	local nFaceUnknown1sData = stream:readu32()
 	stream:readu32()
-	local _faceUnknown1s = readStateMachine(nFaceUnknown1sData, stream)
+	pcall(function()
+		local _faceUnknown1s = readStateMachine(nFaceUnknown1sData, stream)
+	end)
+
+	if nFaceUnknown1sData > 0 then
+		error("Unknown data detected! Please report to EgoMoose with a copy of the union you are trying to convert.")
+	end
 
 	local nFaceColorsData = stream:readu32()
 	stream:readu32()

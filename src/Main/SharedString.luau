@@ -9,7 +9,7 @@ exactly one local union
 local EncodingService = game:GetService("EncodingService") :: EncodingService
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local BufferStream = require(pluginRoot.Utilities.BufferStream)
+local BufferStream = require(pluginRoot.Packages.BufferStream)
 local lz4 = require(pluginRoot.Utilities.lz4)
 
 -- selene: allow(bad_string_escape)
@@ -17,9 +17,6 @@ local MAGIC_NUMBER = "<roblox!\x89\xff\x0d\x0a\x1a\x0a"
 
 -- selene: allow(bad_string_escape)
 local ZSTD_HEADER = "\x28\xB5\x2F\xFD"
-
--- selene: allow(bad_string_escape)
-local CSGMDL_HEADER = "\x15\x7d\x29\x15\x75\x6c"
 
 type Extraction = {
 	sharedStrings: { string },
@@ -38,7 +35,7 @@ local function readHeader(stream: BufferStream.BufferStream)
 	local nClasses = stream:readu32()
 	local nInstances = stream:readu32()
 
-	stream:skipBytes(8)
+	stream:skip(8)
 
 	return {
 		modelVersion = modelVersion,
@@ -65,7 +62,7 @@ local function readChunk(stream: BufferStream.BufferStream, extraction: Extracti
 	local compressedLength = stream:readu32()
 	local uncompressedLength = stream:readu32()
 
-	stream:skipBytes(4)
+	stream:skip(4)
 
 	if chunkType ~= "END\0" then
 		local content: buffer
@@ -80,7 +77,7 @@ local function readChunk(stream: BufferStream.BufferStream, extraction: Extracti
 			end
 		end
 
-		local chunkStream = BufferStream.new(content)
+		local chunkStream = BufferStream.static(content)
 		if chunkType == "SSTR" then
 			readSSTRChunk(chunkStream, extraction)
 		end
@@ -94,7 +91,7 @@ local function extract(b: buffer)
 		sharedStrings = {},
 	}
 
-	local stream = BufferStream.new(b)
+	local stream = BufferStream.static(b)
 	local _header = readHeader(stream)
 
 	repeat
@@ -106,12 +103,11 @@ end
 
 -- Public
 
-function SharedString.readCSGMDLBuffer(b: buffer): buffer?
+function SharedString.extract(b: buffer, predicate: (buffer) -> boolean): buffer?
 	local extraction = extract(b)
 	for _, sharedStr in extraction.sharedStrings do
 		local sharedStrBuffer = buffer.fromstring(sharedStr)
-		local len = buffer.len(sharedStrBuffer)
-		if len >= 6 and buffer.readstring(sharedStrBuffer, 0, 6) == CSGMDL_HEADER then
+		if predicate(sharedStrBuffer) then
 			return sharedStrBuffer
 		end
 	end

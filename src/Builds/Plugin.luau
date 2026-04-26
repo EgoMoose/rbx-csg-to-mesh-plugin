@@ -1,6 +1,7 @@
 --!strict
 
 local SelectionService = game:GetService("Selection") :: Selection
+local ChangeHistoryService = game:GetService("ChangeHistoryService") :: ChangeHistoryService
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Bindings = require(pluginRoot.Main.Bindings)
@@ -61,6 +62,9 @@ function Plugin.build(plugin: Plugin)
 		inProgress = true
 		button.Enabled = false
 
+		local completed = false
+		local recordingIdentifier = ChangeHistoryService:TryBeginRecording("egomoose_csg_to_mesh", "CSG to mesh")
+
 		local selected = getSelected()
 		if selected and selected:IsA("BasePart") then
 			local applyColor = false
@@ -81,11 +85,19 @@ function Plugin.build(plugin: Plugin)
 				meshPart.Parent = selected.Parent
 
 				SelectionService:Set({ meshPart })
+				completed = true
 			else
 				warn(err)
 			end
 		else
-			warn("Select a single  to use.")
+			warn("Select a single BasePart to use.")
+		end
+
+		if recordingIdentifier then
+			ChangeHistoryService:FinishRecording(
+				recordingIdentifier,
+				if completed then Enum.FinishRecordingOperation.Commit else Enum.FinishRecordingOperation.Cancel
+			)
 		end
 
 		button:SetActive(false)

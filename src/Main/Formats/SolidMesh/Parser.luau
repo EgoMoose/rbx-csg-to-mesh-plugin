@@ -64,7 +64,7 @@ function Parser.parse(csgmdlBuffer: buffer)
 	-- this might be UVs?
 	local unknown1 = stream:readu32()
 	stream:readu32()
-	for i = 1, unknown1 do
+	for _i = 1, unknown1 do
 		stream:readf32()
 		stream:readf32()
 	end

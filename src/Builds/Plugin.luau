@@ -22,27 +22,54 @@ local function iconThemed(button: PluginToolbarButton, light: string, dark: stri
 	settings().Studio.ThemeChanged:Connect(onThemeChanged)
 end
 
-local function getSelected(): BasePart?
-	local selection = SelectionService:Get()
-	local selected = if #selection == 1 then selection[1] else nil
-	if selected and selected:IsA("BasePart") then
-		if
-			selected:IsA("UnionOperation")
-			or selected:IsA("Part")
-			or selected:IsA("WedgePart")
-			or selected:IsA("CornerWedgePart")
-		then
-			return selected
+local function isConvertible(instance: Instance): boolean
+	return instance:IsA("UnionOperation")
+		or instance:IsA("Part")
+		or instance:IsA("WedgePart")
+		or instance:IsA("CornerWedgePart")
+end
+
+local function getSelected(): { BasePart }
+	local selected = {}
+	for _, instance in SelectionService:Get() do
+		if isConvertible(instance) then
+			table.insert(selected, instance :: BasePart)
 		end
 	end
-	return nil
+	return selected
+end
+
+local function hasSelected(): boolean
+	return #getSelected() > 0
+end
+
+local function toMeshPart(selected: BasePart): (MeshPart?, string)
+	local applyColor = false
+	if selected:IsA("UnionOperation") then
+		applyColor = not selected.UsePartColor
+	end
+
+	local solidMesh, err = SolidMesh.fromPart(selected)
+	if not solidMesh then
+		return nil, err
+	end
+
+	local meshPart = solidMesh:ToMeshPart(applyColor)
+	meshPart.Anchored = true
+	meshPart.Material = selected.Material
+	meshPart.MaterialVariant = selected.MaterialVariant
+	meshPart.Color = if applyColor then Color3.new(1, 1, 1) else selected.Color
+	meshPart.CFrame = selected.CFrame
+	meshPart.Size = selected.Size
+
+	return meshPart, err
 end
 
 function Plugin.build(plugin: Plugin)
 	local toolbar = plugin:CreateToolbar("CSG Tools")
 	local button = toolbar:CreateButton(
 		"egomoose_csg_to_mesh",
-		"Convert a selected UnionOperation into an EditableMesh",
+		"Convert the selected UnionOperations into EditableMeshes",
 		"",
 		"CSG To Mesh"
 	)
@@ -52,51 +79,54 @@ function Plugin.build(plugin: Plugin)
 	local inProgress = false
 	local selectionChanged = SelectionService.SelectionChanged:Connect(function()
 		if not inProgress then
-			button.Enabled = not not getSelected()
+			button.Enabled = hasSelected()
 		end
 	end)
 
-	button.Enabled = not not getSelected()
+	button.Enabled = hasSelected()
 
 	local buttonClicked = button.Click:Connect(function()
 		inProgress = true
 		button.Enabled = false
 
 		local selected = getSelected()
-		if selected and selected:IsA("BasePart") then
-			local applyColor = false
-			if selected:IsA("UnionOperation") then
-				applyColor = not selected.UsePartColor
+		if #selected > 0 then
+			-- conversion yields, so build every mesh before recording the change
+			local converted: { [BasePart]: MeshPart } = {}
+			for _, part in selected do
+				local meshPart, err = toMeshPart(part)
+				if meshPart then
+					meshPart.Name = part.Name
+					converted[part] = meshPart
+				else
+					warn(`Failed to convert {part:GetFullName()}: {err}`)
+				end
 			end
 
-			local solidMesh, err = SolidMesh.fromPart(selected)
-
-			if solidMesh then
-				local meshPart = solidMesh:ToMeshPart(applyColor)
+			if next(converted) then
 				local recording = ChangeHistoryService:TryBeginRecording("plugin:egomoose:csg_to_mesh")
 
-				meshPart.Anchored = true
-				meshPart.Material = selected.Material
-				meshPart.MaterialVariant = selected.MaterialVariant
-				meshPart.Color = if applyColor then Color3.new(1, 1, 1) else selected.Color
-				meshPart.CFrame = selected.CFrame
-				meshPart.Size = selected.Size
-				meshPart.Parent = selected.Parent
+				local meshParts = {}
+				for _, part in selected do
+					local meshPart = converted[part]
+					if meshPart then
+						meshPart.Parent = part.Parent
+						table.insert(meshParts, meshPart)
+					end
+				end
 
-				SelectionService:Set({ meshPart })
+				SelectionService:Set(meshParts :: any)
 
 				if recording then
 					ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
 				end
-			else
-				warn(err)
 			end
 		else
-			warn("Select a single  to use.")
+			warn("Select at least one union or part to use.")
 		end
 
 		button:SetActive(false)
-		button.Enabled = not not getSelected()
+		button.Enabled = hasSelected()
 		inProgress = false
 	end)
 

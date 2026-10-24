@@ -1,5 +1,6 @@
 --!strict
 
+local ChangeHistoryService = game:GetService("ChangeHistoryService") :: ChangeHistoryService
 local SelectionService = game:GetService("Selection") :: Selection
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
@@ -72,6 +73,8 @@ function Plugin.build(plugin: Plugin)
 
 			if solidMesh then
 				local meshPart = solidMesh:ToMeshPart(applyColor)
+				local recording = ChangeHistoryService:TryBeginRecording("plugin:egomoose:csg_to_mesh")
+
 				meshPart.Anchored = true
 				meshPart.Material = selected.Material
 				meshPart.MaterialVariant = selected.MaterialVariant
@@ -81,6 +84,10 @@ function Plugin.build(plugin: Plugin)
 				meshPart.Parent = selected.Parent
 
 				SelectionService:Set({ meshPart })
+
+				if recording then
+					ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+				end
 			else
 				warn(err)
 			end

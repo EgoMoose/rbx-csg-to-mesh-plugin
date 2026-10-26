@@ -2,7 +2,7 @@
 name = "egomoose/rbx-csg-to-mesh-plugin"
 description = "A roblox plugin that converts union operations to editable meshes."
 repository = "https://github.com/EgoMoose/rbx-csg-to-mesh-plugin"
-version = "2.2.0"
+version = "2.2.1"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 license = "MIT"
@@ -18,4 +18,4 @@ include = [
 private = true
 
 [dependencies]
-BufferStream = "egomoose/buffer-stream@1.0.0"
+BufferStream = "egomoose/buffer-stream@1.1.0"
